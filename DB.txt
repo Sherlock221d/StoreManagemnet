@@ -1,0 +1,311 @@
+
+-CREATE TABLE [dbo].[Department_mast](
+	[DepartMent_Id] [int] IDENTITY(1,1) NOT NULL,
+	[DepartmentName] [varchar](100) NULL,
+
+-CREATE TABLE [dbo].[Item_Master](
+	[Item_Id] [int] IDENTITY(1,1) NOT NULL,
+	[Item_Name] [varchar](100) NULL,
+	[Category] [varchar](100) NULL,
+	[Rate] [int] NULL,
+	[Balance_Quantity] [int] NULL,
+
+-CREATE TABLE [dbo].[Items_Transactions](
+	[Transaction_Id] [int] IDENTITY(1,1) NOT NULL,
+	[Item_id] [int] NULL,
+	[Transaction_date] [date] NULL,
+	[Department_Id] [int] NULL,
+	[Vendor_Id] [int] NULL,
+	[Quantity] [int] NULL,
+ 
+-CREATE TABLE [dbo].[Vendor_Mast](
+	[Vendor_Id] [int] IDENTITY(1,1) NOT NULL,
+	[Vendor_Name] [varchar](250) NULL,
+ 
+-Create procedure [dbo].[Sp_CheckDuplicateItem]
+@ItemName varchar(100)
+AS
+begin
+SELECT COUNT(*) FROM Item_Master WHERE Item_Name = @ItemName
+End
+
+-Create procedure [dbo].[Sp_DepartmentUserDetails]
+As
+begin
+Select* from Department_mast
+End
+
+-CREATE PROCEDURE [dbo].[Sp_DInsert]
+    @DepartmentName VARCHAR(100)
+    
+AS
+BEGIN
+    INSERT INTO Department_mast (DepartmentName)
+    VALUES (@DepartmentName);
+END
+
+-CREATE PROCEDURE [dbo].[Sp_DUpdate]
+    @Id INT,
+    @DepartmentName VARCHAR(100)
+    
+AS
+BEGIN
+
+    UPDATE Department_mast
+    SET
+        DepartmentName = @DepartmentName
+    WHERE
+        DepartMent_Id = @Id;
+END
+
+-Create procedure [dbo].[Sp_GetallCategory]
+AS
+Begin
+Select * from Category
+End
+
+-Create Procedure [dbo].[Sp_GetAllDepartments]
+As
+Begin
+Select * from Department_mast
+End
+
+-Create Procedure [dbo].[Sp_GetallItems]
+AS
+Begin
+Select Item_Id,Item_Name from Item_Master
+End
+
+-Create Procedure [dbo].[Sp_GetAllVendors]
+As
+Begin
+Select * from Vendor_Mast
+End
+
+-Create procedure [dbo].[SP_GetDEntryById]
+@Id int 
+As
+begin
+Select * from Department_mast where DepartMent_Id=@Id
+End
+
+-Create procedure [dbo].[SP_GetItemEntryById]
+@Id int
+as
+begin
+Select * from Item_Master where Item_Id=@Id
+End
+
+-CREATE PROCEDURE [dbo].[Sp_GetItemTransactionsByDateRange]
+    @FromDate DATE,
+    @ToDate DATE
+AS
+BEGIN
+    SELECT
+        IT.Transaction_Id,
+        IM.Item_Name,
+        IT.Transaction_date,
+        DM.DepartmentName,
+        VM.Vendor_Name,
+        IT.Quantity
+    FROM
+        Items_Transactions IT
+        INNER JOIN Item_Master IM ON IT.Item_id = IM.Item_Id
+        INNER JOIN Department_mast DM ON IT.Department_Id = DM.DepartMent_Id
+        INNER JOIN Vendor_Mast VM ON IT.Vendor_Id = VM.Vendor_Id
+    WHERE
+        IT.Transaction_date BETWEEN @FromDate AND @ToDate;
+END;
+
+-CREATE PROCEDURE [dbo].[Sp_GetRateAndBalanceByItem]
+    @ItemId INT
+AS
+BEGIN
+    SELECT Rate, Balance_Quantity
+    FROM Item_Master
+    WHERE Item_Id = @ItemId;
+END;
+
+-Create procedure [dbo].[Sp_GetTransactionsDetails]
+as
+begin
+SELECT
+        IT.Transaction_Id,
+        IM.Item_Name,
+        IT.Transaction_date,
+        DM.DepartmentName,
+        VM.Vendor_Name,
+        IT.Quantity
+    FROM
+        Items_Transactions IT
+        INNER JOIN Item_Master IM ON IT.Item_id = IM.Item_Id
+        INNER JOIN Department_mast DM ON IT.Department_Id = DM.DepartMent_Id
+        INNER JOIN Vendor_Mast VM ON IT.Vendor_Id = VM.Vendor_Id
+End
+
+-Create procedure [dbo].[Sp_GetUserDetails]
+as
+begin
+Select * from Item_Master
+End
+
+-Create procedure [dbo].[Sp_GetVendorMasterList]
+As
+begin
+Select* from Vendor_Mast
+End
+
+-Create procedure [dbo].[SP_GetVEntryById]
+@Id int 
+As
+begin
+Select * from Vendor_Mast where Vendor_Id=@Id
+End
+
+-CREATE PROCEDURE [dbo].[Sp_ItemEntryInsert]
+    @ItemName VARCHAR(100),
+    @Rate int,
+    @BalanceQty INT,
+    @Category VARCHAR(100)
+AS
+BEGIN
+    INSERT INTO Item_Master (Item_Name, Rate, Balance_Quantity, Category)
+    VALUES (@ItemName, @Rate, @BalanceQty, @Category);
+END
+
+-CREATE PROCEDURE [dbo].[Sp_ItemEntryUpdate]
+    @Id INT,
+    @ItemName VARCHAR(100),
+    @Rate int,
+    @BalanceQty INT,
+    @Category VARCHAR(100)
+AS
+BEGIN
+
+    UPDATE Item_Master
+    SET
+        Item_Name = @ItemName,
+        Rate = @Rate,
+        Balance_Quantity = @BalanceQty,
+        Category = @Category
+    WHERE
+        Item_Id = @Id;
+END
+
+-CREATE PROCEDURE [dbo].[Sp_ItemsdataTransactions]
+    @Item_id INT,
+    @Transaction_date DATE,
+    @Department_Id INT,
+    @Vendor_Id INT,
+    @Quantity INT
+AS
+BEGIN
+    INSERT INTO Items_Transactions (Item_id, Transaction_date, Department_Id, Vendor_Id, Quantity)
+    VALUES (@Item_id, @Transaction_date, @Department_Id, @Vendor_Id, @Quantity);
+
+UPDATE Item_Master
+    SET Balance_Quantity = Balance_Quantity - @Quantity
+    WHERE Item_Id = @Item_id;
+
+
+END;
+
+
+-Create PROCEDURE [dbo].[Sp_RUpdate]
+    @Id INT,
+    @VendorName VARCHAR(100)
+    
+AS
+BEGIN
+
+    UPDATE Vendor_Mast
+    SET
+        Vendor_Name = @VendorName
+    WHERE
+        Vendor_Id = @Id;
+END
+
+-CREATE PROCEDURE [dbo].[Sp_SearchDepartment]
+    @txtsearch VARCHAR(100)
+AS
+BEGIN
+    IF @txtsearch IS NOT NULL AND @txtsearch <> ''
+    BEGIN
+        SELECT *
+        FROM Department_mast
+        WHERE 
+            DepartmentName LIKE '%' + @txtsearch + '%'
+            
+        ORDER BY DepartMent_Id DESC
+    END
+    ELSE
+    BEGIN
+        SELECT *
+        FROM Department_mast
+        ORDER BY DepartMent_Id DESC
+    END
+END
+
+-CREATE PROCEDURE [dbo].[Sp_SearchItemEntry]
+    @txtsearch VARCHAR(100)
+AS
+BEGIN
+    IF @txtsearch IS NOT NULL AND @txtsearch <> ''
+    BEGIN
+        SELECT *
+        FROM Item_Master
+        WHERE 
+            Item_Name LIKE '%' + @txtsearch + '%'
+            OR Category LIKE '%' + @txtsearch + '%'
+            OR CONVERT(VARCHAR, Rate) LIKE '%' + @txtsearch + '%'
+            OR CONVERT(VARCHAR, Balance_Quantity) LIKE '%' + @txtsearch + '%' 
+        ORDER BY Item_Id DESC
+    END
+    ELSE
+    BEGIN
+        SELECT *
+        FROM Item_Master
+        ORDER BY Item_Id DESC
+    END
+END
+
+-create PROCEDURE [dbo].[Sp_SearchVendor]
+    @txtsearch VARCHAR(100)
+AS
+BEGIN
+    IF @txtsearch IS NOT NULL AND @txtsearch <> ''
+    BEGIN
+        SELECT *
+        FROM Vendor_Mast
+        WHERE 
+            Vendor_Name LIKE '%' + @txtsearch + '%'
+            
+        ORDER BY Vendor_Id DESC
+    END
+    ELSE
+    BEGIN
+        SELECT *
+        FROM Vendor_Mast
+        ORDER BY Vendor_Id DESC
+    END
+END
+
+-create PROCEDURE [dbo].[Sp_VendorInsert]
+    @VendorName VARCHAR(250),
+    @VendorValue int
+AS
+BEGIN
+    INSERT INTO Vendor_Mast (Vendor_Name, VendorValue)
+    VALUES (@VendorName, @VendorValue);
+END
+
+
+-Create PROCEDURE [dbo].[Sp_VInsert]
+    @VName VARCHAR(100)
+    
+AS
+BEGIN
+    INSERT INTO Vendor_Mast (Vendor_Name)
+    VALUES (@VName);
+END
+GO
